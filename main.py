@@ -16,4 +16,5 @@ Bing = 'www.bing.com'
 DuckDuckGo = 'www.duckduckgo.com'
 SearchEngine = [Google, Bing, DuckDuckGo]
 print(ipaddress.ip_address(ipv4_address))
+print(ipaddress.ip_network(ipv4_address, strict=True))
 webbrowser.open_new(f"{Protocol}{SearchEngine[0]}")
