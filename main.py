@@ -1,3 +1,5 @@
 import webbrowser
 
-webbrowser.open_new("https://www.google.com")
+Protocol = 'https://'
+
+webbrowser.open_new("www.google.com")
