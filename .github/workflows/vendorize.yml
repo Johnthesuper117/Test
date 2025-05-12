@@ -1,0 +1,31 @@
+name: Vendorize Dependencies
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  vendorize:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip download --dest vendor pydub moviepy Pillow
+
+      - name: Commit and push vendored files
+        run: |
+          git config --local user.name "GitHub Actions"
+          git config --local user.email "actions@github.com"
+          git add vendor
+          git commit -m "Add vendored dependencies"
+          git push origin main
