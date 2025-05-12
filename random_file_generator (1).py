@@ -2,6 +2,11 @@ from pydub.generators import Sine
 from moviepy.editor import ColorClip
 from PIL import Image
 import random
+import sys
+import os
+
+# Add the 'vendor' directory to the system path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "vendor"))
 
 def generate_mp3():
     # Generate a 1-second sine wave audio and save as MP3
