@@ -14,3 +14,8 @@ npm i -g opencode-ai
 curl -fsSL https://opencode.ai/install | bash
 npm install -g @sourcegraph/amp@latest
 curl -fsSL https://ampcode.com/install.sh | bash
+pip install daytona
+npm install @daytonaio/sdk
+
+key_0e60ef81be9ec31783a4820215e88334fb7de1ec27d92e2dec4c033ef37bc5fa
+
