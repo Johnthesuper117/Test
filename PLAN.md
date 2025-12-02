@@ -9,3 +9,8 @@ Animations: While limited with ASCII, you can create simple animations by changi
 npm i -g @openai/codex@latest
 npm i -g @openai/codex
 irm https://claude.ai/install.ps1 | iex
+npm install -g @qodo/command
+npm i -g opencode-ai
+curl -fsSL https://opencode.ai/install | bash
+npm install -g @sourcegraph/amp@latest
+curl -fsSL https://ampcode.com/install.sh | bash
