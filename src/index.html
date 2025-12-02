@@ -1,12 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ASCII RPG</title>
+  <title>ASCII Roguelike</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>ASCII RPG</h1>
-  <pre id="game-screen"></pre>
+  <div id="gameContainer">
+    <pre id="gameMap"></pre>
+    <div id="gui">
+      <p id="messageLog">Welcome to the dungeon!</p>
+      <button id="attackButton">Attack</button>
+      <div id="inventory">
+        Inventory: <span id="inventoryItems"></span>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>

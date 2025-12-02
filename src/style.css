@@ -1,17 +1,37 @@
 body {
-  font-family: monospace; /* Crucial for aligning ASCII characters */
-  background-color: #111;
-  color: #EEE;
-  text-align: center;
+  font-family: monospace;
+  background-color: #222;
+  color: #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
 }
 
-#game-screen {
-  font-family: monospace; /* Ensure consistent character width */
-  font-size: 16px;       /* Adjust for desired size */
-  line-height: 1;       /* Important for eliminating vertical spacing */
-  background-color: black;
-  color: lightgreen;
-  padding: 10px;
-  border: 1px solid #333;
-  display: inline-block; /* Important to wrap pre element properly */
+#gameContainer {
+  display: flex;
+}
+
+#gameMap {
+  font-size: 16px;
+  line-height: 1em;
+  white-space: pre; /* Important for ASCII art */
+  margin-right: 20px;
+}
+
+#gui {
+  width: 200px;
+}
+
+#inventory {
+  margin-top: 10px;
+}
+
+button {
+  background-color: #555;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
 }
