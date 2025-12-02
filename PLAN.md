@@ -5,3 +5,7 @@ Items and Inventory: Add items that the player can collect and use.
 GUI: Use HTML elements (buttons, text input) to create a more user-friendly interface (menus, inventory management).
 Levels: Create multiple levels.
 Animations: While limited with ASCII, you can create simple animations by changing characters rapidly.
+
+npm i -g @openai/codex@latest
+npm i -g @openai/codex
+irm https://claude.ai/install.ps1 | iex
