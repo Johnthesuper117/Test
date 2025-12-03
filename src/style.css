@@ -1,37 +1,35 @@
-body {
-  font-family: monospace;
-  background-color: #222;
-  color: #ddd;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-}
-
 #gameContainer {
-  display: flex;
+  width: 800px;
+  margin: 0 auto;
+  border: 1px solid #ccc;
+  padding: 10px;
 }
 
-#gameMap {
-  font-size: 16px;
-  line-height: 1em;
-  white-space: pre; /* Important for ASCII art */
-  margin-right: 20px;
+#messageLog {
+  height: 100px;
+  overflow-y: scroll;
+  border: 1px solid #eee;
+  margin-bottom: 10px;
 }
 
-#gui {
-  width: 200px;
+#playerStats, #enemyStats, #inventory, #levelDisplay {
+  border: 1px solid #eee;
+  padding: 5px;
+  margin-bottom: 10px;
 }
 
-#inventory {
-  margin-top: 10px;
+#gameBoard {
+  font-family: monospace;
+  white-space: pre;
 }
 
-button {
-  background-color: #555;
-  color: #fff;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
+#settingsMenu {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 20px;
+  z-index: 1000;
 }

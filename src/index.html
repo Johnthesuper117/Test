@@ -1,19 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ASCII Roguelike</title>
+  <title>ASCII Combat Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="gameContainer">
-    <pre id="gameMap"></pre>
-    <div id="gui">
-      <p id="messageLog">Welcome to the dungeon!</p>
-      <button id="attackButton">Attack</button>
-      <div id="inventory">
-        Inventory: <span id="inventoryItems"></span>
-      </div>
+    <div id="messageLog"></div>
+    <div id="playerStats"></div>
+    <div id="enemyStats"></div>
+    <div id="inventory"></div>
+    <div id="levelDisplay"></div>
+
+    <div id="gameBoard"></div>
+
+    <div id="settingsMenu" style="display: none;">
+      <h2>Settings</h2>
+      <label for="moveUpKey">Move Up:</label>
+      <input type="text" id="moveUpKey" value="w" maxlength="1"><br>
+      <label for="moveDownKey">Move Down:</label>
+      <input type="text" id="moveDownKey" value="s" maxlength="1"><br>
+      <label for="moveLeftKey">Move Left:</label>
+      <input type="text" id="moveLeftKey" value="a" maxlength="1"><br>
+      <label for="moveRightKey">Move Right:</label>
+      <input type="text" id="moveRightKey" value="d" maxlength="1"><br>
+      <label for="attackKey">Attack:</label>
+      <input type="text" id="attackKey" value="j" maxlength="1"><br>
+      <label for="useItemKey">Use Item:</label>
+      <input type="text" id="useItemKey" value="k" maxlength="1"><br>
+      <button id="saveSettingsButton">Save Settings</button>
+      <button id="closeSettingsButton">Close</button>
     </div>
+
+    <button id="settingsButton">Settings</button>
   </div>
 
   <script src="script.js"></script>

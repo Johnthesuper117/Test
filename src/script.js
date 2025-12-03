@@ -1,239 +1,437 @@
-// Game parameters
-const MAP_WIDTH = 40;
-const MAP_HEIGHT = 20;
-const MAX_ROOMS = 10;
-const MIN_ROOM_SIZE = 3;
-const MAX_ROOM_SIZE = 8;
+// Classes (same as before)
+class Character {
+  constructor(name, hp, attack, defense) {
+    this.name = name;
+    this.maxHp = hp;
+    this.hp = hp;
+    this.attack = attack;
+    this.defense = defense;
+    this.x = 0;
+    this.y = 0;
+  }
 
-// Game state
-let map = [];
-let playerX, playerY;
-let enemies = [];
-let inventory = [];
-let currentLevel = 1;
+  isAlive() {
+    return this.hp > 0;
+  }
 
-// DOM elements
-const gameMapElement = document.getElementById("gameMap");
-const messageLogElement = document.getElementById("messageLog");
-const attackButton = document.getElementById("attackButton");
-const inventoryItemsElement = document.getElementById("inventoryItems");
+  takeDamage(damage) {
+    this.hp -= damage;
+    if (this.hp < 0) {
+      this.hp = 0;
+    }
+    this.logMessage(`${this.name} takes ${damage} damage!`);
+    this.updateStatsDisplay();
+  }
 
-// Tile characters
-const TILE_FLOOR = '.';
-const TILE_WALL = '#';
-const TILE_PLAYER = '@';
-const TILE_ENEMY = 'E';
-const TILE_ITEM = 'i';
+  attackTarget(target) {
+    const damage = Math.max(0, this.attack - target.defense); // Ensure damage isn't negative
+    target.takeDamage(damage);
+    this.logMessage(`${this.name} attacks ${target.name} for ${damage} damage!`);
+  }
 
-// Item definitions
-const ITEMS = [
-  { name: "Potion", symbol: "!", effect: () => {
-      // Simplified healing effect
-      messageLogElement.textContent = "You drink a potion and feel better!";
-  }}
-];
+  logMessage(message) {
+    const messageLog = document.getElementById("messageLog");
+    messageLog.textContent += message + "\n";
+    messageLog.scrollTop = messageLog.scrollHeight; // Auto-scroll
+  }
 
-// --- Helper Functions ---
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  updateStatsDisplay() {
+    // Implemented in subclasses.
+  }
 }
 
-// --- Map Generation ---
+class Player extends Character {
+  constructor(name = "Hero") {
+    super(name, 100, 15, 5);
+    this.inventory = [];
+  }
 
-function generateMap() {
-  map = Array(MAP_HEIGHT).fill(null).map(() => Array(MAP_WIDTH).fill(TILE_WALL));
+  updateStatsDisplay() {
+    const playerStatsDiv = document.getElementById("playerStats");
+    playerStatsDiv.textContent = `Player: ${this.name} | HP: ${this.hp}/${this.maxHp} | Attack: ${this.attack} | Defense: ${this.defense}`;
 
-  const rooms = [];
+    const inventoryDiv = document.getElementById("inventory");
+    inventoryDiv.textContent = `Inventory: ${this.inventory.map(item => item.name).join(", ")}`;
+  }
 
-  for (let i = 0; i < MAX_ROOMS; i++) {
-    const width = getRandomInt(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
-    const height = getRandomInt(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
-    const x = getRandomInt(1, MAP_WIDTH - width - 1);
-    const y = getRandomInt(1, MAP_HEIGHT - height - 1);
+  addItem(item) {
+    this.inventory.push(item);
+    this.logMessage(`Picked up ${item.name}`);
+    this.updateStatsDisplay();
+    this.populateItemSelect();
+  }
 
-    const newRoom = { x, y, width, height };
+  useItem(item) {
+    if (!this.inventory.includes(item)) {
+      this.logMessage("You don't have that item!");
+      return;
+    }
 
-    // Check for overlaps with existing rooms
-    let overlap = false;
-    for (const room of rooms) {
-      if (isRoomOverlapping(newRoom, room)) {
-        overlap = true;
-        break;
+    item.use(this);
+    this.inventory = this.inventory.filter(i => i !== item); // Remove used item
+    this.updateStatsDisplay();
+    this.populateItemSelect();
+  }
+
+  populateItemSelect() {
+      const itemSelect = document.getElementById("itemSelect");
+      itemSelect.innerHTML = ""; // Clear existing options
+      this.inventory.forEach(item => {
+          const option = document.createElement("option");
+          option.value = item.name;
+          option.textContent = item.name;
+          itemSelect.appendChild(option);
+      });
+  }
+
+  move(dx, dy) {
+    let newX = this.x + dx;
+    let newY = this.y + dy;
+
+    if (newX >= 0 && newX < levelWidth && newY >= 0 && newY < levelHeight && level[newY][newX] === '.') {
+      this.x = newX;
+      this.y = newY;
+      updateGameBoard();
+      return true; // Indicate successful move
+    }
+    return false; //Indicate failed move
+  }
+}
+
+class Enemy extends Character {
+  constructor(name, hp, attack, defense, aiType = 'basic') {
+    super(name, hp, attack, defense);
+    this.aiType = aiType;
+  }
+
+  updateStatsDisplay() {
+    const enemyStatsDiv = document.getElementById("enemyStats");
+    enemyStatsDiv.textContent = `Enemy: ${this.name} | HP: ${this.hp}/${this.maxHp} | Attack: ${this.attack} | Defense: ${this.defense}`;
+  }
+
+  aiTurn() {
+    if (this.aiType === 'basic') {
+      this.basicAI();
+    } else {
+      // Potentially more complex AI types here
+      this.logMessage(`${this.name} does nothing.`);
+    }
+  }
+
+  basicAI() {
+    // Simple AI: Attack if in range, otherwise do nothing
+    const distanceX = Math.abs(this.x - player.x);
+    const distanceY = Math.abs(this.y - player.y);
+
+    if (distanceX <= 1 && distanceY <= 1) {
+      this.attackTarget(player);
+    } else {
+      //Basic movement towards player
+      let dx = 0;
+      let dy = 0;
+
+      if (player.x < this.x) {
+          dx = -1;
+      } else if (player.x > this.x) {
+          dx = 1;
+      }
+
+      if (player.y < this.y) {
+          dy = -1;
+      } else if (player.y > this.y) {
+          dy = 1;
+      }
+
+      this.move(dx, dy);
+    }
+  }
+
+  move(dx, dy) {
+    let newX = this.x + dx;
+    let newY = this.y + dy;
+
+    if (newX >= 0 && newX < levelWidth && newY >= 0 && newX < levelHeight && level[newY][newX] === '.') {
+      this.x = newX;
+      this.y = newY;
+      updateGameBoard();
+      return true; // Indicate successful move
+    }
+    return false; //Indicate failed move
+  }
+}
+
+class Item {
+  constructor(name, description, use) {
+    this.name = name;
+    this.description = description;
+    this.use = use;
+  }
+}
+
+// Game State
+let player;
+let enemy;
+let currentLevel = 1;
+let level;
+let levelWidth;
+let levelHeight;
+let gameBoardDiv;
+let isPlayerTurn = true;
+
+// Items
+const healthPotion = new Item(
+  "Health Potion",
+  "Restores 20 HP.",
+  (user) => {
+    user.hp = Math.min(user.maxHp, user.hp + 20);
+    user.logMessage(`${user.name} drinks a health potion and recovers 20 HP.`);
+    user.updateStatsDisplay();
+  }
+);
+
+const strengthElixir = new Item(
+    "Strength Elixir",
+    "Temporarily increases attack by 5.",
+    (user) => {
+      user.attack += 5;
+      user.logMessage(`${user.name} drinks a Strength Elixir! Attack increased.`);
+      user.updateStatsDisplay();
+      setTimeout(() => {
+        user.attack -= 5; // Revert after a delay
+        user.logMessage(`${user.name}'s Strength Elixir wears off.`);
+        user.updateStatsDisplay();
+      }, 10000); // 10 seconds
+    }
+  );
+
+const ironShield = new Item(
+    "Iron Shield",
+    "Temporarily increases defense by 5.",
+    (user) => {
+      user.defense += 5;
+      user.logMessage(`${user.name} equips an Iron Shield! Defense increased.`);
+      user.updateStatsDisplay();
+      setTimeout(() => {
+        user.defense -= 5; // Revert after a delay
+        user.logMessage(`${user.name}'s Iron Shield loses effectiveness.`);
+        user.updateStatsDisplay();
+      }, 10000); // 10 seconds
+    }
+  );
+
+// Keybindings
+let keybindings = {
+  moveUp: "w",
+  moveDown: "s",
+  moveLeft: "a",
+  moveRight: "d",
+  attack: "j",
+  useItem: "k"
+};
+
+// Game Functions
+function initializeGame() {
+  player = new Player();
+  gameBoardDiv = document.getElementById("gameBoard");
+
+  // Add initial items
+  player.addItem(healthPotion);
+  player.addItem(strengthElixir);
+  player.addItem(ironShield);
+
+  // Setup event listeners
+  document.getElementById("settingsButton").addEventListener("click", openSettings);
+  document.getElementById("saveSettingsButton").addEventListener("click", saveSettings);
+  document.getElementById("closeSettingsButton").addEventListener("click", closeSettings);
+
+  loadSettings(); // Load keybindings from localStorage, if any
+
+  //Keydown Event Listener
+  document.addEventListener("keydown", handleKeyInput);
+
+  generateLevel(currentLevel);
+}
+
+function generateLevel(levelNumber) {
+  //Larger Map
+  level = [
+      "################################",
+      "#..............................#",
+      "#...#...#...#...#...#...#...#.#",
+      "#.................#...........#",
+      "#.#####.#####.#####.####.####.#",
+      "#...#...#.......#.......#...#.#",
+      "#.................#...........#",
+      "#...#...#...#...#...#...#...#.#",
+      "#.................#...........#",
+      "#.#####.#####.#####.####.####.#",
+      "#..............................#",
+      "#...#...#...#...#...#...#...#.#",
+      "#.................#...........#",
+      "################################"
+  ];
+
+  levelWidth = level[0].length;
+  levelHeight = level.length;
+
+  // Place player at start
+  player.x = 1;
+  player.y = 1;
+
+  // Place enemy (basic placement for now)
+  enemy = new Enemy(`Goblin (Lvl ${levelNumber})`, 30 + (levelNumber * 10), 8 + (levelNumber * 2), 2 + levelNumber, 'basic');
+  enemy.x = levelWidth - 2;
+  enemy.y = levelHeight - 2;
+
+  updateLevelDisplay();
+  updateGameBoard();
+  player.updateStatsDisplay();
+  enemy.updateStatsDisplay();
+}
+
+function updateGameBoard() {
+  let boardString = "";
+  for (let y = 0; y < levelHeight; y++) {
+    for (let x = 0; x < levelWidth; x++) {
+      if (x === player.x && y === player.y) {
+        boardString += "P"; // Player
+      } else if (x === enemy.x && y === enemy.y && enemy.isAlive()) {
+        boardString += "E"; // Enemy
+      } else {
+        boardString += level[y][x];
       }
     }
-
-    if (!overlap) {
-      rooms.push(newRoom);
-      createRoom(newRoom);
-    }
+    boardString += "\n"; // Newline at end of each row
   }
-
-  // Connect the rooms
-  for (let i = 0; i < rooms.length - 1; i++) {
-    connectRooms(rooms[i], rooms[i + 1]);
-  }
-
-  // Place the player in the first room
-  playerX = rooms[0].x + Math.floor(rooms[0].width / 2);
-  playerY = rooms[0].y + Math.floor(rooms[0].height / 2);
-
-  //Place enemies (simple placement, could be improved)
-  for (let i = 0; i < 3; i++) {
-      let enemyX, enemyY;
-      do {
-          enemyX = getRandomInt(1, MAP_WIDTH - 2);
-          enemyY = getRandomInt(1, MAP_HEIGHT - 2);
-      } while (map[enemyY][enemyX] !== TILE_FLOOR || (enemyX === playerX && enemyY === playerY));
-
-      enemies.push({x: enemyX, y: enemyY, hp: 10});
-  }
-
-   // Place items (simplified placement)
-   for (let i = 0; i < 2; i++) {
-        let itemX, itemY;
-        do {
-            itemX = getRandomInt(1, MAP_WIDTH - 2);
-            itemY = getRandomInt(1, MAP_HEIGHT - 2);
-        } while (map[itemY][itemX] !== TILE_FLOOR || (itemX === playerX && itemY === playerY));
-        map[itemY][itemX] = TILE_ITEM;
-    }
-
-
+  gameBoardDiv.textContent = boardString;
 }
 
-function isRoomOverlapping(room1, room2) {
-    return (
-        room1.x < room2.x + room2.width &&
-        room1.x + room1.width > room2.x &&
-        room1.y < room2.y + room2.height &&
-        room1.y + room1.height > room2.y
-    );
+function updateLevelDisplay() {
+    document.getElementById("levelDisplay").textContent = `Level: ${currentLevel}`;
 }
 
-function createRoom(room) {
-  for (let y = room.y; y < room.y + room.height; y++) {
-    for (let x = room.x; x < room.x + room.width; x++) {
-      map[y][x] = TILE_FLOOR;
-    }
+function playerAttack() {
+  if (!isPlayerTurn) return;
+
+  player.attackTarget(enemy);
+
+  if (!enemy.isAlive()) {
+    endCombat(true); // Player wins
+    return;
+  }
+
+  endPlayerTurn();
+}
+
+function playerMove(dx, dy) {
+  if (!isPlayerTurn) return;
+
+  if (player.move(dx, dy)) {
+    endPlayerTurn();
+  } else {
+    player.logMessage("Cannot move there.");
   }
 }
 
-function connectRooms(room1, room2) {
-  const startX = Math.floor(room1.x + room1.width / 2);
-  const startY = Math.floor(room1.y + room1.height / 2);
-  const endX = Math.floor(room2.x + room2.width / 2);
-  const endY = Math.floor(room2.y + room2.height / 2);
+function useSelectedItem() {
+  if (!isPlayerTurn) return;
 
-  // Create a tunnel between the rooms (L-shaped)
-  let currentX = startX;
-  let currentY = startY;
+  const itemSelect = document.getElementById("itemSelect");
+  const itemName = itemSelect.value;
+  const item = player.inventory.find(item => item.name === itemName);
 
-  while (currentX !== endX) {
-    currentX += (endX > currentX) ? 1 : -1;
-    map[currentY][currentX] = TILE_FLOOR;
-  }
-
-  while (currentY !== endY) {
-    currentY += (endY > currentY) ? 1 : -1;
-    map[currentY][currentX] = TILE_FLOOR;
+  if (item) {
+    player.useItem(item);
+    endPlayerTurn();
+  } else {
+    player.logMessage("No item selected.");
   }
 }
 
-// --- Game Logic ---
-
-function updateMapDisplay() {
-  let displayString = "";
-  for (let y = 0; y < MAP_HEIGHT; y++) {
-    for (let x = 0; x < MAP_WIDTH; x++) {
-        if (x === playerX && y === playerY) {
-            displayString += TILE_PLAYER;
-        } else {
-            let enemyHere = false;
-            for(const enemy of enemies) {
-                if (enemy.x === x && enemy.y === y) {
-                    displayString += TILE_ENEMY;
-                    enemyHere = true;
-                    break;
-                }
-            }
-            if (!enemyHere) {
-                displayString += map[y][x];
-            }
-
-        }
-
-    }
-    displayString += "\n";
-  }
-  gameMapElement.textContent = displayString;
+function endPlayerTurn() {
+  isPlayerTurn = false;
+  enemyTurn();
 }
 
-function movePlayer(dx, dy) {
-  const newX = playerX + dx;
-  const newY = playerY + dy;
+function enemyTurn() {
+  enemy.aiTurn();
 
-  if (newX >= 0 && newX < MAP_WIDTH && newY >= 0 && newY < MAP_HEIGHT && map[newY][newX] === TILE_FLOOR) {
-    playerX = newX;
-    playerY = newY;
-    updateMapDisplay();
-    moveEnemies();
-    checkItemPickup();
+  if (!player.isAlive()) {
+    endCombat(false); // Enemy wins
+    return;
+  }
+
+  isPlayerTurn = true; // Back to player
+  player.updateStatsDisplay(); // Update stats in case enemy attacked
+}
+
+function endCombat(playerWon) {
+  if (playerWon) {
+    player.logMessage("You defeated the enemy!");
+    currentLevel++;
+    generateLevel(currentLevel); // Next level
+  } else {
+    player.logMessage("You were defeated!");
+    // Reset Game
+    currentLevel = 1;
+    initializeGame();
   }
 }
 
-function moveEnemies() {
-    for (const enemy of enemies) {
-        //Simple movement: move randomly towards player
-        const dx = Math.sign(playerX - enemy.x);
-        const dy = Math.sign(playerY - enemy.y);
+function handleKeyInput(event) {
+  const key = event.key.toLowerCase();
 
-        const newX = enemy.x + dx;
-        const newY = enemy.y + dy;
-
-        if (newX >= 0 && newX < MAP_WIDTH && newY >= 0 && newY < MAP_HEIGHT && map[newY][newX] === TILE_FLOOR) {
-            enemy.x = newX;
-            enemy.y = newY;
-        }
-    }
-    updateMapDisplay();
-}
-
-function checkItemPickup() {
-    if (map[playerY][playerX] === TILE_ITEM) {
-        map[playerY][playerX] = TILE_FLOOR;
-        //Pick a random item
-        const item = ITEMS[getRandomInt(0, ITEMS.length - 1)];
-        inventory.push(item);
-        updateInventoryDisplay();
-        messageLogElement.textContent = `You found a ${item.name}!`;
-        updateMapDisplay();
-    }
-}
-
-function attack() {
-  // Simplified attack logic
-  messageLogElement.textContent = "You attack!";
-}
-
-function updateInventoryDisplay() {
-    inventoryItemsElement.textContent = inventory.map(item => item.name).join(", ");
-}
-
-// --- Event Listeners ---
-document.addEventListener("keydown", (event) => {
-  switch (event.key) {
-    case "ArrowUp":    movePlayer(0, -1); break;
-    case "ArrowDown":  movePlayer(0, 1); break;
-    case "ArrowLeft":  movePlayer(-1, 0); break;
-    case "ArrowRight": movePlayer(1, 0); break;
+  if (key === keybindings.moveUp) {
+    playerMove(0, -1);
+  } else if (key === keybindings.moveDown) {
+    playerMove(0, 1);
+  } else if (key === keybindings.moveLeft) {
+    playerMove(-1, 0);
+  } else if (key === keybindings.moveRight) {
+    playerMove(1, 0);
+  } else if (key === keybindings.attack) {
+    playerAttack();
+  } else if (key === keybindings.useItem) {
+    useSelectedItem();
   }
-});
+}
 
-attackButton.addEventListener("click", attack);
+// Settings Menu Functions
+function openSettings() {
+  document.getElementById("settingsMenu").style.display = "block";
+  // Populate settings fields with current values
+  document.getElementById("moveUpKey").value = keybindings.moveUp;
+  document.getElementById("moveDownKey").value = keybindings.moveDown;
+  document.getElementById("moveLeftKey").value = keybindings.moveLeft;
+  document.getElementById("moveRightKey").value = keybindings.moveRight;
+  document.getElementById("attackKey").value = keybindings.attack;
+  document.getElementById("useItemKey").value = keybindings.useItem;
+}
 
-// --- Initialization ---
-generateMap();
-updateMapDisplay();
-updateInventoryDisplay();
+function saveSettings() {
+  keybindings.moveUp = document.getElementById("moveUpKey").value.toLowerCase();
+  keybindings.moveDown = document.getElementById("moveDownKey").value.toLowerCase();
+  keybindings.moveLeft = document.getElementById("moveLeftKey").value.toLowerCase();
+  keybindings.moveRight = document.getElementById("moveRightKey").value.toLowerCase();
+  keybindings.attack = document.getElementById("attackKey").value.toLowerCase();
+  keybindings.useItem = document.getElementById("useItemKey").value.toLowerCase();
+
+  localStorage.setItem("keybindings", JSON.stringify(keybindings)); // Save to localStorage
+
+  closeSettings();
+  player.logMessage("Settings saved.");
+}
+
+function closeSettings() {
+  document.getElementById("settingsMenu").style.display = "none";
+}
+
+function loadSettings() {
+  const savedSettings = localStorage.getItem("keybindings");
+  if (savedSettings) {
+    keybindings = JSON.parse(savedSettings);
+  }
+}
+
+// Initialization
+initializeGame();
